@@ -1,5 +1,12 @@
 # Eclipse Menu
 
+## Unreleased
+**Features**:
+* <cg>Added</c> <co>No Orb Pulse</c> hack with a configurable pulse size
+* <cg>Added</c> <co>No Circles</c> hack to hide circle wave effects
+* <cg>Added</c> <co>Force 16:9</c> hack with letterbox bars
+* <cg>Added</c> <co>Auto Key Press</c> hack to simulate a keyboard key at a set level percentage (desktop only)
+
 ## v1.9.4
 **Fixes**:
 * <cg>Fixed</c> an incompatibility with <cl>Deltarune Textboxes</c> that caused crashes on level launch

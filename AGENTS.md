@@ -62,8 +62,8 @@ namespace eclipse::hacks::Level {
 
 Key mechanics:
 
-- The component ID **is** the config key. Toggle state lives at `<id>.toggle`; `addFloatToggle`/`addInputFloat` store the value at `<id>`.
-- The component title is an **i18n key**, not a display string. Unknown keys render as the raw key.
+- The component ID **is** the config key. `addToggle` stores its bool at `<id>`; `addFloatToggle`/`addIntToggle` store the value at `<id>` and the enabled state at `<id>.toggle` (which is what `ADD_HOOKS_DELEGATE` must receive for those).
+- The component title is normally an **i18n key**; unknown keys render as the raw key. Fork-only features may use literal English titles/descriptions until translations land upstream.
 - `ADD_HOOKS_DELEGATE(id)` makes hooks no-ops while the toggle is off (no manual `if` needed). For priority use `ENABLE_SAFE_HOOKS_ALL()` / `ENABLE_FIRST_HOOKS_ALL()`.
 - Read config with `config::get<"key", T>()` (compile-time key, cached) or `config::get<T>("key", fallback)`.
 - Options/sub-settings: `->addOptions([](auto o){ o->addInputInt("level.myhack.interval", 1, 1000); })`.
@@ -75,7 +75,7 @@ Key mechanics:
 - axtra-utils is a single `src/main.cpp` driven by Geode `mod.json` settings. Do **not** copy that pattern: Eclipse uses `config` + `MenuTab` components, and keybinds via `handleKeybinds()` (not a custom `KeyRecordLayer`).
 - OS-level key simulation (`SendInput`, `CGEventCreateKeyboardEvent`) is desktop-only. Wrap includes **and** calls in `#ifdef GEODE_IS_WINDOWS` / `#ifdef GEODE_IS_MACOS`; unguarded `<windows.h>` / CoreGraphics breaks Android/iOS CI.
 - Check for existing equivalents before porting. Current overlaps: `hacks/Player/Autoclicker.cpp` (in-game `handleButton`, not OS input), `hacks/Level/HideLevelCompleteVFX.cpp` (`CCCircleWave`), `hacks/Level/LegacyPulse.cpp` (`FMODAudioEngine::m_pulse1`).
-- axtra features not present here: orb-pulse size override, force 16:9 letterbox, OS key press on death/level completion.
+- Ported axtra features: `hacks/Level/NoOrbPulse.cpp`, `hacks/Level/NoCircles.cpp`, `hacks/Global/ForceAspectRatio.cpp`, `hacks/Player/AutoKeyPress.cpp` (desktop-only OS key simulation).
 - Don't depend on the `axtra.axtra-utils` mod at runtime. `_spr` resolves to this mod's ID (`eclipse.eclipse-menu`).
 - New sprites/files must be registered in `mod.json` under `resources` (glob patterns) or they won't ship.
 
