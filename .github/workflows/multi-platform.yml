@@ -94,66 +94,11 @@ jobs:
         with:
           # sdk: nightly
           combine: true
-          # cache may hold a broken partial checkout of a pinned dependency
-          use-cpm-cache: false
+          use-cpm-cache: true
           export-pdb: true
           export-symbols: true
           target: ${{ matrix.config.target }}
           build-config: ${{ matrix.config.build-type || 'Release' }}
-
-      # Temporary: re-run CMake configure and surface the first errors as annotations,
-      # so they can be inspected from the API without an authenticated log download.
-      - name: Report configure errors
-        if: failure()
-        shell: bash
-        run: |
-          set +e
-          TARGET="${{ matrix.config.target }}"
-          if [ -z "$TARGET" ]; then
-            if [ "$RUNNER_OS" = "Windows" ]; then TARGET=Win64; else TARGET=MacOS; fi
-          fi
-
-          NDK_PATH=/usr/local/lib/android/sdk/ndk/29.0.14206865
-          EXTRA=""
-          case "$TARGET" in
-            Android32) EXTRA="-DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_shared -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=android-23" ;;
-            Android64) EXTRA="-DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_shared -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-23" ;;
-            iOS) EXTRA="-DCMAKE_SYSTEM_NAME=iOS -DGEODE_TARGET_PLATFORM=iOS -DGEODE_DISABLE_PRECOMPILED_HEADERS=OFF" ;;
-            MacOS) EXTRA="-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DGEODE_DISABLE_PRECOMPILED_HEADERS=OFF -DCMAKE_AR=/usr/bin/ar -DCMAKE_RANLIB=/usr/bin/ranlib" ;;
-          esac
-
-          LOG="$RUNNER_TEMP/configure.log"
-          BUILDLOG="$RUNNER_TEMP/build.log"
-          rm -rf build
-
-          if [ "$RUNNER_OS" = "macOS" ]; then CCACHE_VARIANT=""; else CCACHE_VARIANT=sccache; fi
-          if [ -n "$CCACHE_VARIANT" ]; then
-            CCACHE_PATH="$(which "$CCACHE_VARIANT")"
-            EXTRA="$EXTRA -DCMAKE_C_COMPILER_LAUNCHER=$CCACHE_PATH -DCMAKE_CXX_COMPILER_LAUNCHER=$CCACHE_PATH"
-          fi
-
-          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
-            -DGEODE_CODEGEN_CMAKE_ARGS="-DCMAKE_C_COMPILER=clang;-DCMAKE_CXX_COMPILER=clang++;-G Ninja" \
-            -G Ninja $EXTRA -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-            -DGEODE_DONT_INSTALL_MODS=ON -DGEODE_TARGET_PLATFORM=$TARGET > "$LOG" 2>&1
-          RC=$?
-          NINJA=no
-          [ -f build/build.ninja ] && NINJA=yes
-          echo "::error::configure exit=$RC build.ninja=$NINJA"
-
-          cmake --build build --config RelWithDebInfo --parallel 2 > "$BUILDLOG" 2>&1
-          BRC=$?
-          echo "::error::build exit=$BRC"
-
-          echo "--- tail of build log ---"
-          tail -n 40 "$BUILDLOG"
-          echo "--- end ---"
-
-          grep -h -i -E "error:|fatal error|CMake Error|undefined reference|no member named|no matching function" "$LOG" "$BUILDLOG" | head -n 8 | while IFS= read -r line; do
-            echo "::error::$line"
-          done
-          exit 0
 
   package:
     name: Package builds
