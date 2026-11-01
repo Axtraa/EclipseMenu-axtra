@@ -40,6 +40,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # See multi-platform.yml: strip iOS addresses from the FMOD bindings so
+      # Codegen does not emit uncompilable iOS thunks.
+      - name: Prepare bindings
+        shell: bash
+        run: |
+          git clone --quiet --depth 1 https://github.com/geode-sdk/bindings.git bindings-repo
+          perl -pi -e 's/ = ios 0x[0-9a-f]+//g' bindings-repo/bindings/2.2081/FMOD.bro
+          echo "GEODE_BINDINGS_REPO_PATH=$GITHUB_WORKSPACE/bindings-repo" >> "$GITHUB_ENV"
+
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:

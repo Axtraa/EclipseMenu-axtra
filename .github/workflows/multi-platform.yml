@@ -41,6 +41,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # iOS codegen workaround: geode-sdk/bindings declares the FMOD API as
+      # [[link(win, android, mac)]] with ios addresses, so Codegen emits iOS
+      # thunks against headers that are not available on iOS, which fails to
+      # compile ("unknown type name 'FMOD_RESULT'"). Dropping the iOS addresses
+      # leaves those APIs unbound on iOS, where they were never linkable.
+      - name: Prepare bindings
+        shell: bash
+        run: |
+          git clone --quiet --depth 1 https://github.com/geode-sdk/bindings.git bindings-repo
+          perl -pi -e 's/ = ios 0x[0-9a-f]+//g' bindings-repo/bindings/2.2081/FMOD.bro
+          echo "GEODE_BINDINGS_REPO_PATH=$GITHUB_WORKSPACE/bindings-repo" >> "$GITHUB_ENV"
+
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:
