@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.21)
 add_library(third_party INTERFACE)
 
+# Dependencies are pinned by full commit hash. GIT_SHALLOW is disabled because
+# FetchContent cannot check out an arbitrary commit from a shallow clone.
+
 # Include libraries
 add_library(imgui INTERFACE)
 CPMAddPackage(
     NAME imgui
     GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/imgui.git
     GIT_TAG 8cf1bfc66d88ef84cf312865ed81bf17d6622c34
+    GIT_SHALLOW FALSE
 )
 target_include_directories(imgui INTERFACE ${imgui_SOURCE_DIR})
 target_sources(imgui INTERFACE
@@ -25,23 +29,60 @@ if (NOT ANDROID AND NOT IOS)
         NAME discord-presence
         GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/discord-presence.git
         GIT_TAG 3b50b0854ec24f9b2d4cc8e28f9145f276bb998e
+        GIT_SHALLOW FALSE
     )
 endif()
 
-CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02bef18f15105500b914a12f2a2d9bb59f21")
-CPMAddPackage("gh:prevter/msgpack-for-matjson#12edd5a3c8eb1afa409669020517dac1e4bc0f96")
-CPMAddPackage("gh:maxnut/GDR-converter#71104a9e0ae9bee19f3fc4b784303fc2929eab9d")
+CPMAddPackage(
+    NAME gd-imgui-cocos
+    GIT_REPOSITORY https://github.com/prevter/gd-imgui-cocos.git
+    GIT_TAG e66d02bef18f15105500b914a12f2a2d9bb59f21
+    GIT_SHALLOW FALSE
+)
+CPMAddPackage(
+    NAME msgpack-for-matjson
+    GIT_REPOSITORY https://github.com/prevter/msgpack-for-matjson.git
+    GIT_TAG 12edd5a3c8eb1afa409669020517dac1e4bc0f96
+    GIT_SHALLOW FALSE
+)
+CPMAddPackage(
+    NAME GDR-converter
+    GIT_REPOSITORY https://github.com/maxnut/GDR-converter.git
+    GIT_TAG 71104a9e0ae9bee19f3fc4b784303fc2929eab9d
+    GIT_SHALLOW FALSE
+)
 CPMAddPackage(
     NAME rift
     GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/rift.git
     GIT_TAG v2.0.2
+    GIT_SHALLOW FALSE
 )
-CPMAddPackage("gh:prevter/AdvancedLabel#17ed1c1a84dac0551c7db975038573280594cd92")
-CPMAddPackage("gh:prevter/sinaps#7d2f7b13e0946ddb7ae3de1ac4ae3e5ddb893bcf")
-CPMAddPackage("gh:prevter/rock#6a2d29ea1fae8b4a5e8fa5f3517bbd92c577bacc")
+CPMAddPackage(
+    NAME AdvancedLabel
+    GIT_REPOSITORY https://github.com/prevter/AdvancedLabel.git
+    GIT_TAG 17ed1c1a84dac0551c7db975038573280594cd92
+    GIT_SHALLOW FALSE
+)
+CPMAddPackage(
+    NAME sinaps
+    GIT_REPOSITORY https://github.com/prevter/sinaps.git
+    GIT_TAG 7d2f7b13e0946ddb7ae3de1ac4ae3e5ddb893bcf
+    GIT_SHALLOW FALSE
+)
+CPMAddPackage(
+    NAME rock
+    GIT_REPOSITORY https://github.com/prevter/rock.git
+    GIT_TAG 6a2d29ea1fae8b4a5e8fa5f3517bbd92c577bacc
+    GIT_SHALLOW FALSE
+)
 
 if (WIN32)
-    CPMAddPackage("gh:zyantific/zydis#ae12a099a1323d1535881b50b5afe72cc0894afa")
+    CPMAddPackage(
+        NAME zydis
+        GIT_REPOSITORY https://github.com/zyantific/zydis.git
+        GIT_TAG ae12a099a1323d1535881b50b5afe72cc0894afa
+        GIT_SHALLOW FALSE
+    )
 endif ()
 
 # Fix debug build

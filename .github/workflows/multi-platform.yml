@@ -46,6 +46,8 @@ jobs:
         with:
           # sdk: nightly
           combine: true
+          # cache may hold a broken partial checkout of a pinned dependency
+          use-cpm-cache: false
           export-pdb: true
           export-symbols: true
           target: ${{ matrix.config.target }}
