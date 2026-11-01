@@ -47,12 +47,18 @@ CPMAddPackage(
     GIT_TAG 12edd5a3c8eb1afa409669020517dac1e4bc0f96
     GIT_SHALLOW FALSE
 )
+# GDR-converter adds a test executable when BUILD_TESTING is ON, and runs it
+# post-build. The test links against the game runtime, so it can never be
+# built here: hide BUILD_TESTING while the package is configured.
+set(ECLIPSE_SAVED_BUILD_TESTING ${BUILD_TESTING})
+set(BUILD_TESTING OFF)
 CPMAddPackage(
     NAME GDR-converter
     GIT_REPOSITORY https://github.com/maxnut/GDR-converter.git
     GIT_TAG 71104a9e0ae9bee19f3fc4b784303fc2929eab9d
     GIT_SHALLOW FALSE
 )
+set(BUILD_TESTING ${ECLIPSE_SAVED_BUILD_TESTING})
 CPMAddPackage(
     NAME rift
     GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/rift.git
