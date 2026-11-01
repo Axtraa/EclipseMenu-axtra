@@ -41,16 +41,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # iOS codegen workaround: geode-sdk/bindings declares the FMOD API as
-      # [[link(win, android, mac)]] with ios addresses, so Codegen emits iOS
-      # thunks against headers that are not available on iOS, which fails to
-      # compile ("unknown type name 'FMOD_RESULT'"). Dropping the iOS addresses
-      # leaves those APIs unbound on iOS, where they were never linkable.
+      # Workarounds for upstream bindings/codegen bugs that only affect iOS.
+      # 1. The FMOD API is declared [[link(win, android, mac)]] with ios
+      #    addresses, so Codegen emits iOS thunks against headers that are not
+      #    available there ("unknown type name 'FMOD_RESULT'").
+      # 2. Codegen emits constructor/destructor modify hooks with an empty
+      #    address for declarations that are not linked on iOS, which does not
+      #    compile ("expected expression").
       - name: Prepare bindings
         shell: bash
         run: |
           git clone --quiet --depth 1 https://github.com/geode-sdk/bindings.git bindings-repo
           perl -pi -e 's/ = ios 0x[0-9a-f]+//g' bindings-repo/bindings/2.2081/FMOD.bro
+          cat > bindings-repo/eclipse-ios-patch.cmake <<'EOF'
+          file(GLOB _eclipse_headers ${GEODE_CODEGEN_PATH}/Geode/modify/*.hpp)
+          foreach(_eclipse_header IN LISTS _eclipse_headers)
+              file(READ "${_eclipse_header}" _eclipse_content)
+              string(REGEX REPLACE "\n[ \t]*GEODE_APPLY_MODIFY_FOR_(CONSTRUCTOR|DESTRUCTOR)\\(, [^\n]*" "" _eclipse_patched "${_eclipse_content}")
+              if (NOT _eclipse_patched STREQUAL _eclipse_content)
+                  file(WRITE "${_eclipse_header}" "${_eclipse_patched}")
+                  message(STATUS "Patched empty iOS modify hook in ${_eclipse_header}")
+              endif()
+          endforeach()
+          EOF
+          perl -pi -e 's{^file\(GLOB GEODE_BINDINGS_FILES}{include(\${CMAKE_CURRENT_LIST_DIR}/eclipse-ios-patch.cmake)\nfile(GLOB GEODE_BINDINGS_FILES}' bindings-repo/CMakeLists.txt
           echo "GEODE_BINDINGS_REPO_PATH=$GITHUB_WORKSPACE/bindings-repo" >> "$GITHUB_ENV"
 
       - name: Build the mod
