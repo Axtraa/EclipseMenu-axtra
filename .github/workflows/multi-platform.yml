@@ -51,22 +51,39 @@ jobs:
           target: ${{ matrix.config.target }}
           build-config: ${{ matrix.config.build-type || 'Release' }}
 
-      # Temporary: re-run the build and surface the first errors as annotations,
+      # Temporary: re-run CMake configure and surface the first errors as annotations,
       # so they can be inspected from the API without an authenticated log download.
-      - name: Report build errors
+      - name: Report configure errors
         if: failure()
         shell: bash
         run: |
           set +e
-          LOG="$RUNNER_TEMP/build-errors.log"
-          if [ -f build/CMakeCache.txt ]; then
-            cmake --build build --config "${{ matrix.config.build-type || 'Release' }}" --parallel 2 > "$LOG" 2>&1
+          TARGET="${{ matrix.config.target }}"
+          if [ -z "$TARGET" ]; then
+            if [ "$RUNNER_OS" = "Windows" ]; then TARGET=Win64; else TARGET=MacOS; fi
           fi
-          if [ ! -s "$LOG" ]; then
-            echo "::error::configure stage failed, no build directory to rebuild"
-            exit 0
-          fi
-          grep -i -E "error:|fatal error|CMake Error|undefined reference|no member named" "$LOG" | head -n 10 | while IFS= read -r line; do
+
+          NDK_PATH=/usr/local/lib/android/sdk/ndk/29.0.14206865
+          EXTRA=""
+          case "$TARGET" in
+            Android32) EXTRA="-DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_shared -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=android-23" ;;
+            Android64) EXTRA="-DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_shared -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-23" ;;
+            iOS) EXTRA="-DCMAKE_SYSTEM_NAME=iOS -DGEODE_TARGET_PLATFORM=iOS -DGEODE_DISABLE_PRECOMPILED_HEADERS=OFF" ;;
+            MacOS) EXTRA="-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DGEODE_DISABLE_PRECOMPILED_HEADERS=OFF -DCMAKE_AR=/usr/bin/ar -DCMAKE_RANLIB=/usr/bin/ranlib" ;;
+          esac
+
+          LOG="$RUNNER_TEMP/configure.log"
+          rm -rf build
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+            -DGEODE_CODEGEN_CMAKE_ARGS="-DCMAKE_C_COMPILER=clang;-DCMAKE_CXX_COMPILER=clang++;-G Ninja" \
+            -G Ninja $EXTRA -DGEODE_DONT_INSTALL_MODS=ON -DGEODE_TARGET_PLATFORM=$TARGET > "$LOG" 2>&1
+
+          echo "--- tail of configure log ---"
+          tail -n 30 "$LOG"
+          echo "--- end ---"
+
+          grep -n -i -E "CMake Error|error:|fatal error|Could not find|failed" "$LOG" | head -n 8 | while IFS= read -r line; do
             echo "::error::$line"
           done
           exit 0
