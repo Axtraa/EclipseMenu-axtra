@@ -33,10 +33,12 @@ if (NOT ANDROID AND NOT IOS)
     )
 endif()
 
+# Pinned to the geode branch head: the previous hash (e66d02b) is an orphaned
+# commit that no longer belongs to any branch, so `git clone` cannot fetch it.
 CPMAddPackage(
     NAME gd-imgui-cocos
     GIT_REPOSITORY https://github.com/prevter/gd-imgui-cocos.git
-    GIT_TAG e66d02bef18f15105500b914a12f2a2d9bb59f21
+    GIT_TAG 6383c75f7c3ec1ef63d24e0bc757dd5d4d326f18
     GIT_SHALLOW FALSE
 )
 CPMAddPackage(
