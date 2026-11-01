@@ -13,8 +13,23 @@ Fork of **EclipseMenu** (Geometry Dash mod menu). C++23 + Geode SDK, targets GD 
   ```
 - CI enables **unity build + LTO** (`GITHUB_ACTIONS` in `CMakeLists.txt`). Local builds may not, so duplicate non-static helper names across `.cpp` files can pass locally and fail in CI. Keep helpers `static` or in anonymous namespaces.
 - Dependencies are pinned in `cmake/IncludeLibs.cmake` (CPM, git hashes). Don't bump casually.
-- Translations are fetched from `EclipseMenu/translations` at configure time (`cmake/Translations.cmake`); `resources/translations/*` is gitignored. Set `ECLIPSE_TRANSLATIONS_REPO_PATH` to a local clone for offline/dev builds.
-- `mod.json` requires Geode `5.3.0`; axtra-utils pins `5.7.1`. Port logic, not its build config or manifest.
+- Translations are fetched from `git.eclipse.menu/EclipseMenu/translations` at configure time (`cmake/Translations.cmake`); `resources/translations/*` is gitignored. Set `ECLIPSE_TRANSLATIONS_REPO_PATH` to a local clone for offline/dev builds.
+- `mod.json` requires Geode `5.6.0`; axtra-utils pins `5.7.1`. Port logic, not its build config or manifest. Do not downgrade: SDK 5.3.0–5.5.0 ship a duplicate `bool init()` in `CCFileUtilsWin32.h`, which breaks the Windows build.
+
+## CI (fork-specific)
+
+The fork builds with the public toolchain only — no private EclipseMenu infrastructure. `.github/workflows/multi-platform.yml` and `publish.yml` must stay in sync (both contain the same `Prepare bindings` step).
+
+- **Bindings**: `GEODE_BINDINGS_REPO_PATH` points at a clone of the public `geode-sdk/bindings` (the private `EclipseMenu/bindings` is unreachable), patched by `bindings-repo/eclipse-ios-patch.cmake`:
+  1. `GeneratedSource.cpp` gets `#include <fmod.hpp>`. Codegen emits definitions for the standalone FMOD C API on iOS only, and the file otherwise fails with `unknown type name 'FMOD_RESULT'`.
+  2. Constructor/destructor modify hooks with an empty address are removed. Codegen emits `GEODE_APPLY_MODIFY_FOR_CONSTRUCTOR(, Default, …)` for declarations not linked on iOS (`CCKeyboardDispatcher`, `CCKeyboardHandler`), which does not compile.
+
+  Codegen runs twice (configure time, then again during the build) and the build-time run overwrites the first output, so the patch is both `include()`d and appended as an extra `COMMAND` inside the existing `add_custom_command` (anchored on `COMMENT "Running Codegen"`). Keep both hooks when touching that step.
+- Never strip the `ios 0x…` addresses from `FMOD.bro` to dodge a compile error: those addresses are what makes Codegen emit the iOS definitions, and removing them turns into `Undefined symbols … FMOD::…` at link time.
+- All CPM dependencies use full 40-char SHAs with `GIT_SHALLOW FALSE` (FetchContent cannot check out an arbitrary commit from a shallow clone). EclipseMenu repos are reached through `https://git.eclipse.menu/…`; `gd-imgui-cocos` is pinned to the `geode` branch head because the previous hash was an orphaned commit.
+- `BUILD_TESTING` is masked around the `GDR-converter` `CPMAddPackage` (its test target links against the game runtime).
+- The nightly release step needs `permissions: contents: write` (fork tokens default to read-only) and is `continue-on-error: true`, so a restricted token cannot turn a green build red.
+- Push to the `axtra` remote only (`git@github.com:Axtraa/EclipseMenu-axtra.git`, `main` tracks `axtra/main`). `origin` is the upstream EclipseMenu repo: fetch from it, never push.
 
 ## Adding a hack (primary workflow)
 
