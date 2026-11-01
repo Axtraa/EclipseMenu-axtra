@@ -9,6 +9,11 @@ on:
     branches:
       - "**"
 
+# The nightly release publishes assets with the workflow token, which defaults
+# to read-only on forks.
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -178,6 +183,9 @@ jobs:
       - name: Create nightly release
         uses: andelf/nightly-release@main
         if: github.ref == 'refs/heads/main'
+        # Publishing is best-effort: it needs a writable token, which not every
+        # fork grants. Builds stay available as workflow artifacts.
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
