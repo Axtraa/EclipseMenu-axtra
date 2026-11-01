@@ -11,7 +11,7 @@
 	"name": "Eclipse",
 	"links": {
 		"homepage": "https://eclipse.menu",
-		"source": "https://github.com/EclipseMenu/EclipseMenu",
+		"source": "https://git.eclipse.menu/EclipseMenu/EclipseMenu",
 		"community": "https://discord.gg/NnpwFRDMND"
 	},
 	"api": { "include": [ "include/*.hpp" ] },
