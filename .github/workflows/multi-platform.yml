@@ -51,6 +51,26 @@ jobs:
           target: ${{ matrix.config.target }}
           build-config: ${{ matrix.config.build-type || 'Release' }}
 
+      # Temporary: re-run the build and surface the first errors as annotations,
+      # so they can be inspected from the API without an authenticated log download.
+      - name: Report build errors
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          LOG="$RUNNER_TEMP/build-errors.log"
+          if [ -f build/CMakeCache.txt ]; then
+            cmake --build build --config "${{ matrix.config.build-type || 'Release' }}" --parallel 2 > "$LOG" 2>&1
+          fi
+          if [ ! -s "$LOG" ]; then
+            echo "::error::configure stage failed, no build directory to rebuild"
+            exit 0
+          fi
+          grep -i -E "error:|fatal error|CMake Error|undefined reference|no member named" "$LOG" | head -n 10 | while IFS= read -r line; do
+            echo "::error::$line"
+          done
+          exit 0
+
   package:
     name: Package builds
     runs-on: ubuntu-latest
