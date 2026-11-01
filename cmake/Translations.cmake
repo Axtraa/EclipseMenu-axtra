@@ -5,7 +5,7 @@ if (DEFINED ENV{ECLIPSE_TRANSLATIONS_REPO_PATH})
 else()
     FetchContent_Declare(
         eclipse_translations
-        GIT_REPOSITORY https://github.com/EclipseMenu/translations.git
+        GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/translations.git
         GIT_TAG main
         GIT_SHALLOW TRUE
         UPDATE_DISCONNECTED FALSE
