@@ -28,20 +28,20 @@ if (NOT ANDROID AND NOT IOS)
     )
 endif()
 
-CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02b")
-CPMAddPackage("gh:prevter/msgpack-for-matjson#12edd5a")
-CPMAddPackage("gh:maxnut/GDR-converter#71104a9")
+CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02bef18f15105500b914a12f2a2d9bb59f21")
+CPMAddPackage("gh:prevter/msgpack-for-matjson#12edd5a3c8eb1afa409669020517dac1e4bc0f96")
+CPMAddPackage("gh:maxnut/GDR-converter#71104a9e0ae9bee19f3fc4b784303fc2929eab9d")
 CPMAddPackage(
     NAME rift
     GIT_REPOSITORY https://git.eclipse.menu/EclipseMenu/rift.git
     GIT_TAG v2.0.2
 )
-CPMAddPackage("gh:prevter/AdvancedLabel#17ed1c1")
-CPMAddPackage("gh:prevter/sinaps#7d2f7b1")
-CPMAddPackage("gh:prevter/rock#6a2d29e")
+CPMAddPackage("gh:prevter/AdvancedLabel#17ed1c1a84dac0551c7db975038573280594cd92")
+CPMAddPackage("gh:prevter/sinaps#7d2f7b13e0946ddb7ae3de1ac4ae3e5ddb893bcf")
+CPMAddPackage("gh:prevter/rock#6a2d29ea1fae8b4a5e8fa5f3517bbd92c577bacc")
 
 if (WIN32)
-    CPMAddPackage("gh:zyantific/zydis#ae12a09")
+    CPMAddPackage("gh:zyantific/zydis#ae12a099a1323d1535881b50b5afe72cc0894afa")
 endif ()
 
 # Fix debug build

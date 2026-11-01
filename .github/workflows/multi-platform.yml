@@ -87,10 +87,14 @@ jobs:
             -DGEODE_CODEGEN_CMAKE_ARGS="-DCMAKE_C_COMPILER=clang;-DCMAKE_CXX_COMPILER=clang++;-G Ninja" \
             -G Ninja $EXTRA -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DGEODE_DONT_INSTALL_MODS=ON -DGEODE_TARGET_PLATFORM=$TARGET > "$LOG" 2>&1
-          echo "::error::configure exit=$? build.ninja=$( [ -f build/build.ninja ] && echo yes || echo no )"
+          RC=$?
+          NINJA=no
+          [ -f build/build.ninja ] && NINJA=yes
+          echo "::error::configure exit=$RC build.ninja=$NINJA"
 
           cmake --build build --config RelWithDebInfo --parallel 2 > "$BUILDLOG" 2>&1
-          echo "::error::build exit=$?"
+          BRC=$?
+          echo "::error::build exit=$BRC"
 
           echo "--- tail of build log ---"
           tail -n 40 "$BUILDLOG"
