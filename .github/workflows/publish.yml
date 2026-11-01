@@ -57,7 +57,11 @@ jobs:
               endif()
           endforeach()
           EOF
+          # Codegen runs twice (configure time, then again during the build) and
+          # the build-time run overwrites the configure-time output, so hook the
+          # patch into both runs.
           perl -pi -e 's{^file\(GLOB GEODE_BINDINGS_FILES}{include(\${CMAKE_CURRENT_LIST_DIR}/eclipse-ios-patch.cmake)\nfile(GLOB GEODE_BINDINGS_FILES}' bindings-repo/CMakeLists.txt
+          perl -0pi -e 's{(COMMENT "Running Codegen"\n[ \t]*COMMAND "[^\n]*\n)}{$1\tCOMMAND \${CMAKE_COMMAND} -DGEODE_CODEGEN_PATH=\${GEODE_CODEGEN_PATH} -P \${CMAKE_CURRENT_LIST_DIR}/eclipse-ios-patch.cmake\n}' bindings-repo/CMakeLists.txt
           echo "GEODE_BINDINGS_REPO_PATH=$GITHUB_WORKSPACE/bindings-repo" >> "$GITHUB_ENV"
 
       - name: Build the mod
